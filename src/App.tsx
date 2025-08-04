@@ -1,7 +1,7 @@
-import NotesApp from "./components/common/NotesApp";
+import Notes from "./components/common/Notes";
 
 function App() {
-  return <NotesApp />;
+  return <Notes />;
 }
 
 export default App;
