@@ -13,12 +13,13 @@ interface Note {
 const useNotesDB = () => {
   const dbName = "NotesDatabase";
   const version = 1;
-  const [db, setDb] = useState<IDBDatabase | null>(null);
+  // const dbRef = useState<IDBDatabase | null>(null)[0];
+  let dbInstance: IDBDatabase | null = null;
 
-  const init = (): Promise<void> => {
+  const init = (): Promise<IDBDatabase> => {
     return new Promise((resolve, reject) => {
-      if (db) {
-        resolve();
+      if (dbInstance) {
+        resolve(dbInstance);
         return;
       }
 
@@ -26,8 +27,8 @@ const useNotesDB = () => {
 
       request.onerror = () => reject(request.error);
       request.onsuccess = () => {
-        setDb(request.result);
-        resolve();
+        dbInstance = request.result;
+        resolve(request.result);
       };
 
       request.onupgradeneeded = (event) => {
@@ -45,10 +46,10 @@ const useNotesDB = () => {
   };
 
   const getAllNotes = async (): Promise<Note[]> => {
-    if (!db) await init();
+    const db = await init();
 
     return new Promise((resolve, reject) => {
-      const transaction = db!.transaction(["notes"], "readonly");
+      const transaction = db.transaction(["notes"], "readonly");
       const store = transaction.objectStore("notes");
       const request = store.getAll();
 
@@ -64,10 +65,10 @@ const useNotesDB = () => {
   };
 
   const addNote = async (note: Omit<Note, "id">): Promise<number> => {
-    if (!db) await init();
+    const db = await init();
 
     return new Promise((resolve, reject) => {
-      const transaction = db!.transaction(["notes"], "readwrite");
+      const transaction = db.transaction(["notes"], "readwrite");
       const store = transaction.objectStore("notes");
       const request = store.add(note);
 
@@ -77,10 +78,10 @@ const useNotesDB = () => {
   };
 
   const updateNote = async (note: Note): Promise<void> => {
-    if (!db) await init();
+    const db = await init();
 
     return new Promise((resolve, reject) => {
-      const transaction = db!.transaction(["notes"], "readwrite");
+      const transaction = db.transaction(["notes"], "readwrite");
       const store = transaction.objectStore("notes");
       const request = store.put(note);
 
@@ -90,10 +91,10 @@ const useNotesDB = () => {
   };
 
   const deleteNote = async (id: number): Promise<void> => {
-    if (!db) await init();
+    const db = await init();
 
     return new Promise((resolve, reject) => {
-      const transaction = db!.transaction(["notes"], "readwrite");
+      const transaction = db.transaction(["notes"], "readwrite");
       const store = transaction.objectStore("notes");
       const request = store.delete(id);
 
