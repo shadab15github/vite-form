@@ -10,25 +10,30 @@ interface Note {
   updatedAt: Date;
 }
 
-class NotesDB {
-  private dbName = "NotesDatabase";
-  private version = 1;
-  private db: IDBDatabase | null = null;
+const useNotesDB = () => {
+  const dbName = "NotesDatabase";
+  const version = 1;
+  const [db, setDb] = useState<IDBDatabase | null>(null);
 
-  async init(): Promise<void> {
+  const init = (): Promise<void> => {
     return new Promise((resolve, reject) => {
-      const request = indexedDB.open(this.dbName, this.version);
+      if (db) {
+        resolve();
+        return;
+      }
+
+      const request = indexedDB.open(dbName, version);
 
       request.onerror = () => reject(request.error);
       request.onsuccess = () => {
-        this.db = request.result;
+        setDb(request.result);
         resolve();
       };
 
       request.onupgradeneeded = (event) => {
-        const db = (event.target as IDBOpenDBRequest).result;
-        if (!db.objectStoreNames.contains("notes")) {
-          const store = db.createObjectStore("notes", {
+        const database = (event.target as IDBOpenDBRequest).result;
+        if (!database.objectStoreNames.contains("notes")) {
+          const store = database.createObjectStore("notes", {
             keyPath: "id",
             autoIncrement: true,
           });
@@ -37,13 +42,13 @@ class NotesDB {
         }
       };
     });
-  }
+  };
 
-  async getAllNotes(): Promise<Note[]> {
-    if (!this.db) await this.init();
+  const getAllNotes = async (): Promise<Note[]> => {
+    if (!db) await init();
 
     return new Promise((resolve, reject) => {
-      const transaction = this.db!.transaction(["notes"], "readonly");
+      const transaction = db!.transaction(["notes"], "readonly");
       const store = transaction.objectStore("notes");
       const request = store.getAll();
 
@@ -56,47 +61,49 @@ class NotesDB {
       };
       request.onerror = () => reject(request.error);
     });
-  }
+  };
 
-  async addNote(note: Omit<Note, "id">): Promise<number> {
-    if (!this.db) await this.init();
+  const addNote = async (note: Omit<Note, "id">): Promise<number> => {
+    if (!db) await init();
 
     return new Promise((resolve, reject) => {
-      const transaction = this.db!.transaction(["notes"], "readwrite");
+      const transaction = db!.transaction(["notes"], "readwrite");
       const store = transaction.objectStore("notes");
       const request = store.add(note);
 
       request.onsuccess = () => resolve(request.result as number);
       request.onerror = () => reject(request.error);
     });
-  }
+  };
 
-  async updateNote(note: Note): Promise<void> {
-    if (!this.db) await this.init();
+  const updateNote = async (note: Note): Promise<void> => {
+    if (!db) await init();
 
     return new Promise((resolve, reject) => {
-      const transaction = this.db!.transaction(["notes"], "readwrite");
+      const transaction = db!.transaction(["notes"], "readwrite");
       const store = transaction.objectStore("notes");
       const request = store.put(note);
 
       request.onsuccess = () => resolve();
       request.onerror = () => reject(request.error);
     });
-  }
+  };
 
-  async deleteNote(id: number): Promise<void> {
-    if (!this.db) await this.init();
+  const deleteNote = async (id: number): Promise<void> => {
+    if (!db) await init();
 
     return new Promise((resolve, reject) => {
-      const transaction = this.db!.transaction(["notes"], "readwrite");
+      const transaction = db!.transaction(["notes"], "readwrite");
       const store = transaction.objectStore("notes");
       const request = store.delete(id);
 
       request.onsuccess = () => resolve();
       request.onerror = () => reject(request.error);
     });
-  }
-}
+  };
+
+  return { getAllNotes, addNote, updateNote, deleteNote, init };
+};
 
 const Notes: React.FC = () => {
   const [notes, setNotes] = useState<Note[]>([]);
@@ -105,7 +112,7 @@ const Notes: React.FC = () => {
   const [isCreating, setIsCreating] = useState(false);
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
-  const [db] = useState(() => new NotesDB());
+  const db = useNotesDB();
 
   useEffect(() => {
     loadNotes();
