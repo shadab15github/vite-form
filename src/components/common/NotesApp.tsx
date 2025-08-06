@@ -20,6 +20,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { CryptoUtils } from "../../utils/crypto";
 
 interface Note {
   id?: number;
@@ -67,11 +68,24 @@ class NotesDB {
       const request = store.getAll();
 
       request.onsuccess = () => {
-        const notes = request.result.sort(
-          (a, b) =>
-            new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
-        );
-        resolve(notes);
+        const encryptedNotes = request.result;
+        Promise.all(
+          encryptedNotes.map(async (note) => ({
+            ...note,
+            title: await CryptoUtils.decrypt(note.title),
+            content: await CryptoUtils.decrypt(note.content),
+          }))
+        )
+          .then((decryptedNotes) => {
+            const notes = decryptedNotes.sort(
+              (a, b) =>
+                new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+            );
+            resolve(notes);
+          })
+          .catch((error) => {
+            reject(error);
+          });
       };
       request.onerror = () => reject(request.error);
     });
@@ -80,10 +94,16 @@ class NotesDB {
   async addNote(note: Omit<Note, "id">): Promise<number> {
     if (!this.db) await this.init();
 
+    const encryptedNote = {
+      ...note,
+      title: await CryptoUtils.encrypt(note.title),
+      content: await CryptoUtils.encrypt(note.content),
+    };
+
     return new Promise((resolve, reject) => {
       const transaction = this.db!.transaction(["notes"], "readwrite");
       const store = transaction.objectStore("notes");
-      const request = store.add(note);
+      const request = store.add(encryptedNote);
 
       request.onsuccess = () => resolve(request.result as number);
       request.onerror = () => reject(request.error);
@@ -93,10 +113,16 @@ class NotesDB {
   async updateNote(note: Note): Promise<void> {
     if (!this.db) await this.init();
 
+    const encryptedNote = {
+      ...note,
+      title: await CryptoUtils.encrypt(note.title),
+      content: await CryptoUtils.encrypt(note.content),
+    };
+
     return new Promise((resolve, reject) => {
       const transaction = this.db!.transaction(["notes"], "readwrite");
       const store = transaction.objectStore("notes");
-      const request = store.put(note);
+      const request = store.put(encryptedNote);
 
       request.onsuccess = () => resolve();
       request.onerror = () => reject(request.error);
@@ -128,18 +154,18 @@ const NotesApp: React.FC = () => {
   const [noteToDelete, setNoteToDelete] = useState<number | null>(null);
   const [db] = useState(() => new NotesDB());
 
-  useEffect(() => {
-    loadNotes();
-  }, []);
-
-  const loadNotes = async () => {
+  const loadNotes = React.useCallback(async () => {
     try {
       const allNotes = await db.getAllNotes();
       setNotes(allNotes);
     } catch (error) {
       console.error("Error loading notes:", error);
     }
-  };
+  }, [db]);
+
+  useEffect(() => {
+    loadNotes();
+  }, [loadNotes]);
 
   const handleCreateNote = async () => {
     if (!title.trim() || !content.trim()) return;

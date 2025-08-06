@@ -4,6 +4,8 @@ import React, { useState, useEffect } from "react";
 import { Plus, Search, Edit2, Trash2, Save, X } from "lucide-react";
 // Import CSS styles for the Notes component
 import "./Notes.css";
+// Import crypto utilities for encryption/decryption
+import { CryptoUtils } from "../../utils/crypto";
 
 // Define the structure of a Note object using TypeScript interface
 interface Note {
@@ -67,13 +69,13 @@ const useNotesDB = () => {
     });
   };
 
-  // Retrieve all notes from the database
+  // Retrieve all notes from the database using async/await
   const getAllNotes = async (): Promise<Note[]> => {
     // Ensure database is initialized before performing operations
     const db = await init();
 
-    // Return a Promise to handle the asynchronous database query
-    return new Promise((resolve, reject) => {
+    // Wrap the IndexedDB operation in a Promise and await it
+    const encryptedNotes = await new Promise<Note[]>((resolve, reject) => {
       // Create a read-only transaction for the 'notes' object store
       const transaction = db.transaction(["notes"], "readonly");
       // Get reference to the 'notes' object store
@@ -83,53 +85,80 @@ const useNotesDB = () => {
 
       // Handle successful data retrieval
       request.onsuccess = () => {
-        // Sort notes by updatedAt date in descending order (newest first)
-        const notes = request.result.sort(
-          (a, b) =>
-            new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
-        );
-        // Resolve the promise with the sorted notes array
-        resolve(notes);
+        // Resolve with the retrieved notes
+        resolve(request.result);
       };
       // Handle database query errors
       request.onerror = () => reject(request.error);
     });
+
+    // Decrypt all notes
+    const decryptedNotes = await Promise.all(
+      encryptedNotes.map(async (note) => ({
+        ...note,
+        title: await CryptoUtils.decrypt(note.title),
+        content: await CryptoUtils.decrypt(note.content),
+      }))
+    );
+
+    // Sort notes by updatedAt date in descending order (newest first) and return
+    return decryptedNotes.sort(
+      (a, b) =>
+        new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+    );
   };
 
-  // Add a new note to the database
+  // Add a new note to the database using async/await
   const addNote = async (note: Omit<Note, "id">): Promise<number> => {
     // Ensure database is initialized
     const db = await init();
 
-    // Return a Promise to handle the asynchronous database insertion
-    return new Promise((resolve, reject) => {
+    // Encrypt the note data before storing
+    const encryptedNote = {
+      ...note,
+      title: await CryptoUtils.encrypt(note.title),
+      content: await CryptoUtils.encrypt(note.content),
+    };
+
+    // Wrap the IndexedDB operation in a Promise and await it
+    const noteId = await new Promise<number>((resolve, reject) => {
       // Create a read-write transaction for adding data
       const transaction = db.transaction(["notes"], "readwrite");
       // Get reference to the 'notes' object store
       const store = transaction.objectStore("notes");
-      // Add the new note to the store (ID will be auto-generated)
-      const request = store.add(note);
+      // Add the encrypted note to the store (ID will be auto-generated)
+      const request = store.add(encryptedNote);
 
       // Handle successful note addition
       request.onsuccess = () => resolve(request.result as number);
       // Handle database insertion errors
       request.onerror = () => reject(request.error);
     });
+
+    // Return the generated note ID
+    return noteId;
   };
 
-  // Update an existing note in the database
+  // Update an existing note in the database using async/await
   const updateNote = async (note: Note): Promise<void> => {
     // Ensure database is initialized
     const db = await init();
 
-    // Return a Promise to handle the asynchronous database update
-    return new Promise((resolve, reject) => {
+    // Encrypt the note data before updating
+    const encryptedNote = {
+      ...note,
+      title: await CryptoUtils.encrypt(note.title),
+      content: await CryptoUtils.encrypt(note.content),
+    };
+
+    // Wrap the IndexedDB operation in a Promise and await it
+    await new Promise<void>((resolve, reject) => {
       // Create a read-write transaction for updating data
       const transaction = db.transaction(["notes"], "readwrite");
       // Get reference to the 'notes' object store
       const store = transaction.objectStore("notes");
-      // Update the note using put() - creates if doesn't exist, updates if it does
-      const request = store.put(note);
+      // Update the encrypted note using put() - creates if doesn't exist, updates if it does
+      const request = store.put(encryptedNote);
 
       // Handle successful note update
       request.onsuccess = () => resolve();
@@ -138,13 +167,13 @@ const useNotesDB = () => {
     });
   };
 
-  // Delete a note from the database by its ID
+  // Delete a note from the database by its ID using async/await
   const deleteNote = async (id: number): Promise<void> => {
     // Ensure database is initialized
     const db = await init();
 
-    // Return a Promise to handle the asynchronous database deletion
-    return new Promise((resolve, reject) => {
+    // Wrap the IndexedDB operation in a Promise and await it
+    await new Promise<void>((resolve, reject) => {
       // Create a read-write transaction for deleting data
       const transaction = db.transaction(["notes"], "readwrite");
       // Get reference to the 'notes' object store
