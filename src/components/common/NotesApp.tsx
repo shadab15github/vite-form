@@ -20,7 +20,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { CryptoUtils } from "../../utils/crypto";
+import { encrypt, decrypt } from "../../utils/crypto";
 
 interface Note {
   id?: number;
@@ -72,8 +72,8 @@ class NotesDB {
         Promise.all(
           encryptedNotes.map(async (note) => ({
             ...note,
-            title: await CryptoUtils.decrypt(note.title),
-            content: await CryptoUtils.decrypt(note.content),
+            title: await decrypt(note.title),
+            content: await decrypt(note.content),
           }))
         )
           .then((decryptedNotes) => {
@@ -96,8 +96,8 @@ class NotesDB {
 
     const encryptedNote = {
       ...note,
-      title: await CryptoUtils.encrypt(note.title),
-      content: await CryptoUtils.encrypt(note.content),
+      title: await encrypt(note.title),
+      content: await encrypt(note.content),
     };
 
     return new Promise((resolve, reject) => {
@@ -115,8 +115,8 @@ class NotesDB {
 
     const encryptedNote = {
       ...note,
-      title: await CryptoUtils.encrypt(note.title),
-      content: await CryptoUtils.encrypt(note.content),
+      title: await encrypt(note.title),
+      content: await encrypt(note.content),
     };
 
     return new Promise((resolve, reject) => {

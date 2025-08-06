@@ -5,7 +5,7 @@ import { Plus, Search, Edit2, Trash2, Save, X } from "lucide-react";
 // Import CSS styles for the Notes component
 import "./Notes.css";
 // Import crypto utilities for encryption/decryption
-import { CryptoUtils } from "../../utils/crypto";
+import { encrypt, decrypt } from "../../utils/crypto";
 
 // Define the structure of a Note object using TypeScript interface
 interface Note {
@@ -96,8 +96,8 @@ const useNotesDB = () => {
     const decryptedNotes = await Promise.all(
       encryptedNotes.map(async (note) => ({
         ...note,
-        title: await CryptoUtils.decrypt(note.title),
-        content: await CryptoUtils.decrypt(note.content),
+        title: await decrypt(note.title),
+        content: await decrypt(note.content),
       }))
     );
 
@@ -116,8 +116,8 @@ const useNotesDB = () => {
     // Encrypt the note data before storing
     const encryptedNote = {
       ...note,
-      title: await CryptoUtils.encrypt(note.title),
-      content: await CryptoUtils.encrypt(note.content),
+      title: await encrypt(note.title),
+      content: await encrypt(note.content),
     };
 
     // Wrap the IndexedDB operation in a Promise and await it
@@ -147,8 +147,8 @@ const useNotesDB = () => {
     // Encrypt the note data before updating
     const encryptedNote = {
       ...note,
-      title: await CryptoUtils.encrypt(note.title),
-      content: await CryptoUtils.encrypt(note.content),
+      title: await encrypt(note.title),
+      content: await encrypt(note.content),
     };
 
     // Wrap the IndexedDB operation in a Promise and await it
