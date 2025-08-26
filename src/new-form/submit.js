@@ -1,4 +1,5 @@
 import { DEFAULT_THANK_YOU_MESSAGE } from "./constant.js";
+import { saveFormData } from "./indexDBUtils.js";
 
 export function submitSuccess(e, form) {
   const { payload } = e;
@@ -97,6 +98,19 @@ async function prepareRequest(form) {
 async function submitDocBasedForm(form, captcha) {
   try {
     const { headers, body, url } = await prepareRequest(form, captcha);
+
+    //* TODO: IndexDB Start
+    const formDataToSave = {
+      formId: form.id || form.name || "unknown-form",
+      url: url,
+      data: body.data.payload,
+      formSource: form.dataset.source,
+    };
+
+    const dbRecordId = await saveFormData(formDataToSave);
+    console.log("Form data saved to IndexedDB with ID:", dbRecordId);
+    //* TODO: IndexDB End
+
     let token = null;
     if (captcha) {
       token = await captcha.getToken();
