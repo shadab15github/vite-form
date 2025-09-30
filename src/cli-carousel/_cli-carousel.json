@@ -1,0 +1,54 @@
+{
+  "definitions": [
+    {
+      "title": "CLI Carousel",
+      "id": "cli-carousel",
+      "plugins": {
+        "xwalk": {
+          "page": {
+            "resourceType": "core/franklin/components/block/v1/block",
+            "template": {
+              "name": "CLI Carousel",
+              "filter": "cli-carousel"
+            }
+          }
+        }
+      }
+    },
+    {
+      "title": "CLI Carousel Item",
+      "id": "cli-carousel-item",
+      "plugins": {
+        "xwalk": {
+          "page": {
+            "resourceType": "core/franklin/components/block/v1/block/item",
+            "template": {
+              "name": "CLI Carousel Item",
+              "model": "cli-carousel-item"
+            }
+          }
+        }
+      }
+    }
+  ],
+  "models": [
+    {
+      "id": "cli-carousel-item",
+      "fields": [
+        {
+          "component": "reference",
+          "valueType": "string",
+          "name": "image",
+          "label": "Image",
+          "multi": false
+        }
+      ]
+    }
+  ],
+  "filters": [
+    {
+      "id": "cli-carousel",
+      "components": ["cli-carousel-item"]
+    }
+  ]
+}
