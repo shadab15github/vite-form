@@ -16,16 +16,15 @@ export default function decorate(block) {
 
     moveInstrumentation(row, slide);
 
-    const picture = row.querySelector("picture > img");
-    if (picture) {
+    // Find <a> inside row
+    const link = row.querySelector("a");
+    if (link && link.href) {
       const optimizedPic = createOptimizedPicture(
-        picture.src,
-        picture.alt,
+        link.href,
+        link.textContent || "",
         false,
         [{ width: "1200" }]
       );
-      moveInstrumentation(picture, optimizedPic.querySelector("img"));
-      picture.closest("picture").replaceWith(optimizedPic);
       slide.append(optimizedPic);
     }
 
