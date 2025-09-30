@@ -7,21 +7,17 @@
 .cli-carousel-slides {
   display: flex;
   transition: transform 0.6s ease-in-out;
+  width: 100%;
 }
 
 .cli-carousel-slide {
-  min-width: 100%;
-  opacity: 0;
-  transition: opacity 0.6s ease-in-out;
-}
-
-.cli-carousel-slide.active {
-  opacity: 1;
+  flex: 0 0 100%;
+  max-width: 100%;
 }
 
 .cli-carousel-slide img {
   width: 100%;
-  height: auto;
+  height: 400px;
   display: block;
   object-fit: cover;
 }
@@ -42,7 +38,7 @@
   border-radius: 50%;
   cursor: pointer;
   opacity: 0.6;
-  transition: opacity 0.3s;
+  transition: opacity 0.3s, background-color 0.3s;
 }
 
 .cli-carousel-dots .dot.active {

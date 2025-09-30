@@ -9,10 +9,9 @@ export default function decorate(block) {
   slidesWrapper.classList.add("cli-carousel-slides");
 
   // Create slides
-  [...block.children].forEach((row, index) => {
+  [...block.children].forEach((row) => {
     const slide = document.createElement("div");
     slide.classList.add("cli-carousel-slide");
-    if (index === 0) slide.classList.add("active");
 
     moveInstrumentation(row, slide);
 
@@ -52,13 +51,11 @@ export default function decorate(block) {
   const dots = dotsWrapper.querySelectorAll(".dot");
 
   function showSlide(index) {
-    slides[currentIndex].classList.remove("active");
-    dots[currentIndex].classList.remove("active");
-
     currentIndex = index;
+    slidesWrapper.style.transform = `translateX(-${index * 100}%)`;
 
-    slides[currentIndex].classList.add("active");
-    dots[currentIndex].classList.add("active");
+    dots.forEach((dot) => dot.classList.remove("active"));
+    dots[index].classList.add("active");
   }
 
   // Auto slide
@@ -66,4 +63,7 @@ export default function decorate(block) {
     let nextIndex = (currentIndex + 1) % slides.length;
     showSlide(nextIndex);
   }, 5000);
+
+  // Init position
+  showSlide(0);
 }
