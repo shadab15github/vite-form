@@ -1,7 +1,7 @@
 export default async function decorate(block) {
   function formatPhoneNumber(num) {
     const str = String(num);
-    return `${str.slice(0, 4)}-${str.slice(4, 7)}-${str.slice(7)}`;
+    return `${str.slice(0, 4)} ${str.slice(4, 7)} ${str.slice(7)}`;
   }
 
   try {
@@ -9,7 +9,6 @@ export default async function decorate(block) {
       `${window.hlx.codeBasePath}/dealer-details.json`
     );
     const data = await response.json();
-    const UUID = "16a18ee7-372c-456a-baff-81183198518e";
 
     block.innerHTML = "";
 
@@ -21,95 +20,107 @@ export default async function decorate(block) {
       // Create label
       const label = document.createElement("label");
       label.textContent = "Select Distributor:";
-      label.setAttribute("for", "distributor-select");
-      dropdownContainer.appendChild(label);
+      label.classList.add("distributor-label");
 
-      // Create select element
-      const select = document.createElement("select");
-      select.id = "distributor-select";
-      select.classList.add("distributor-select");
+      // Create dropdown
+      const dropdown = document.createElement("select");
+      dropdown.classList.add("distributor-dropdown");
+      dropdown.id = "distributorSelect";
 
       // Add default option
       const defaultOption = document.createElement("option");
       defaultOption.value = "";
       defaultOption.textContent = "-- Select a Distributor --";
-      defaultOption.disabled = true;
-      defaultOption.selected = true;
-      select.appendChild(defaultOption);
+      dropdown.appendChild(defaultOption);
 
       // Populate dropdown with unique distributor names
-      const uniqueDistributors = {};
-      data.data.forEach((item) => {
-        const distributorName = item["Distributor Name"];
-        if (distributorName && !uniqueDistributors[distributorName]) {
-          uniqueDistributors[distributorName] = true;
-          const option = document.createElement("option");
-          option.value = distributorName;
-          option.textContent = distributorName;
-          select.appendChild(option);
+      const uniqueDistributors = new Map();
+      data.data.forEach((dealer) => {
+        if (
+          dealer["Distributor Name"] &&
+          !uniqueDistributors.has(dealer["Distributor Name"])
+        ) {
+          uniqueDistributors.set(dealer["Distributor Name"], dealer);
         }
       });
 
-      dropdownContainer.appendChild(select);
+      uniqueDistributors.forEach((dealer, distributorName) => {
+        const option = document.createElement("option");
+        option.value = distributorName;
+        option.textContent = distributorName;
+        dropdown.appendChild(option);
+      });
+
+      dropdownContainer.appendChild(label);
+      dropdownContainer.appendChild(dropdown);
       block.appendChild(dropdownContainer);
 
-      // Create details container (initially hidden)
+      // Create container for dealer details (initially hidden)
       const detailsContainer = document.createElement("div");
       detailsContainer.classList.add("dealer-details-container");
+      detailsContainer.style.display = "none";
       block.appendChild(detailsContainer);
 
-      // Event listener for dropdown change
-      select.addEventListener("change", (event) => {
+      // Add event listener to dropdown
+      dropdown.addEventListener("change", (event) => {
         const selectedDistributor = event.target.value;
 
-        console.log("Selected distributor:", selectedDistributor);
+        if (!selectedDistributor) {
+          detailsContainer.style.display = "none";
+          detailsContainer.innerHTML = "";
+          return;
+        }
 
-        if (selectedDistributor) {
-          // Find the dealer with this distributor name
-          const dealer = data.data.find(
-            (d) => d["Distributor Name"] === selectedDistributor
-          );
+        // Find all dealers with the selected distributor name
+        const matchingDealers = data.data.filter(
+          (d) => d["Distributor Name"] === selectedDistributor
+        );
 
-          console.log("Found dealer:", dealer);
+        if (matchingDealers.length > 0) {
+          // Clear previous details
+          detailsContainer.innerHTML = "";
 
-          if (dealer) {
+          // Display details for each matching dealer
+          matchingDealers.forEach((dealer) => {
             const dealerRepsContactNumber = dealer["BDM Contact Number"];
             const customerContactNumber = dealer["Customer Contact Number"];
             const businessHours = dealer["Business Hours"];
             const businessHoursbr = businessHours.replace(/,\s*/g, "<br>");
+            const dealerDiv = document.createElement("div");
+            dealerDiv.classList.add("dealer-details");
 
-            detailsContainer.innerHTML = `
-              <div class="dealer-details">
-                <p><strong>CIL Distributortest: </strong>${
-                  dealer["Distributor Name"]
-                }</p>
-                <p><strong>Agent number: </strong>${dealer["Agent Number"]}</p>
-                <div class="call-wrapper">
-                  <p><strong>Your BDM: </strong>${dealer["BDM Name"]}</p>
-                  <div class="call-icon-details-wrapper">
-                    <img
-                      class="call-icon"
-                      src="${window.hlx.codeBasePath}/icons/call.svg"
-                      alt="Call Icon"
-                      style="cursor: pointer;"
-                    />
-                    <div class="call-details">
-                      <p><strong>Dealer Reps only: ${formatPhoneNumber(
-                        dealerRepsContactNumber
-                      )}</strong></p>
-                      <p>Customers: ${formatPhoneNumber(
-                        customerContactNumber
-                      )}</p>
-                      <p class="opening-time">${businessHoursbr}</p>
-                    </div>
+            dealerDiv.innerHTML = `
+              <p><strong>CIL Distributortest: </strong>${
+                dealer["Distributor Name"]
+              }</p>
+              <p><strong>Agent number: </strong>${dealer["Agent Number"]}</p>
+              <div class="call-wrapper">
+                <p><strong>Your BDM: </strong>${dealer["BDM Name"]}</p>
+                <div class="call-icon-details-wrapper">
+                  <img
+                    class="call-icon"
+                    src="${window.hlx.codeBasePath}/icons/call.svg"
+                    alt="Call Icon"
+                    style="cursor: pointer;"
+                  />
+                  <div class="call-details">
+                    <p><strong>Dealer Reps only: ${formatPhoneNumber(
+                      dealerRepsContactNumber
+                    )}</strong></p>
+                    <p>Customers: ${formatPhoneNumber(
+                      customerContactNumber
+                    )}</p>
+                    <p class="opening-time">${businessHoursbr}</p>
                   </div>
                 </div>
               </div>
             `;
 
+            detailsContainer.appendChild(dealerDiv);
+
             // Toggle call details on icon click
-            const callIcon = detailsContainer.querySelector(".call-icon");
-            const callDetails = detailsContainer.querySelector(".call-details");
+            const callIcon = dealerDiv.querySelector(".call-icon");
+            const callDetails = dealerDiv.querySelector(".call-details");
 
             if (callIcon && callDetails) {
               callIcon.addEventListener("click", (event) => {
@@ -128,12 +139,17 @@ export default async function decorate(block) {
                   callDetails.classList.remove("expanded");
                 }
               });
+
+              callDetails.addEventListener("click", (event) => {
+                event.stopPropagation();
+              });
             }
-          } else {
-            detailsContainer.innerHTML = `<p>Dealer with name "${selectedDistributor}" not found.</p>`;
-          }
+          });
+
+          detailsContainer.style.display = "block";
         } else {
-          detailsContainer.innerHTML = "";
+          detailsContainer.innerHTML = `<p>Dealer with distributor name "${selectedDistributor}" not found.</p>`;
+          detailsContainer.style.display = "block";
         }
       });
     } else {
@@ -146,7 +162,7 @@ export default async function decorate(block) {
 
 // Initialize on DOMContentLoaded
 window.addEventListener("DOMContentLoaded", () => {
-  const block = document.querySelector(".distributor.block");
+  const block = document.querySelector(".distributor-block");
   if (block) {
     decorate(block);
   } else {

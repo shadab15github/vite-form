@@ -7,50 +7,41 @@ main .section .distributor-wrapper {
 /* Dropdown Container Styles */
 .distributor-dropdown-container {
   margin: 20px 0;
-  padding: 15px;
-  background-color: #f9f9f9;
+  padding: 20px;
+  background-color: #f8f8f8;
   border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(22, 21, 19, 0.12);
 }
 
-.distributor-dropdown-container label {
+.distributor-label {
   display: block;
-  margin-bottom: 10px;
-  font-weight: bold;
   font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 10px;
   color: #333;
 }
 
-.distributor-select {
-  width: 50%;
-  max-width: 400px;
-  min-width: 250px;
+.distributor-dropdown {
+  width: 100%;
   padding: 12px 15px;
   font-size: 16px;
   border: 2px solid #ddd;
   border-radius: 6px;
-  background-color: #fff;
+  background-color: white;
   cursor: pointer;
-  transition: all 0.3s ease;
-  appearance: none;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23333' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: right 15px center;
-  padding-right: 40px;
-}
-
-.distributor-select:hover {
-  border-color: #007bff;
-  box-shadow: 0 0 5px rgba(0, 123, 255, 0.3);
-}
-
-.distributor-select:focus {
+  transition: border-color 0.3s ease;
   outline: none;
-  border-color: #007bff;
-  box-shadow: 0 0 8px rgba(0, 123, 255, 0.5);
 }
 
-/* Dealer Details Container */
+.distributor-dropdown:hover {
+  border-color: #ffb300;
+}
+
+.distributor-dropdown:focus {
+  border-color: #ffb300;
+  box-shadow: 0 0 0 3px rgba(255, 179, 0, 0.1);
+}
+
 .dealer-details-container {
   margin-top: 20px;
 }
@@ -65,7 +56,7 @@ main .section .distributor-wrapper {
   min-height: 70px;
   align-items: center;
   border: 1px solid rgba(22, 21, 19, 0.12);
-  box-shadow: 0px 1px 0px 0px rgba(0, 0, 0, 0.16);
+  box-shadow: 0px 1px 1px 0px rgba(0, 0, 0, 0.16);
   gap: 16px;
 }
 
@@ -76,9 +67,6 @@ main .section .distributor-wrapper {
 
 .call-wrapper {
   display: flex;
-  gap: 10px;
-  position: relative;
-  align-items: center;
 }
 
 .call-icon-details-wrapper {
@@ -91,8 +79,6 @@ main .section .distributor-wrapper {
   box-sizing: border-box;
   padding: 5px 10px;
   min-width: 30px;
-  cursor: pointer;
-  transition: all 0.3s ease;
 }
 
 .call-icon:hover {
@@ -118,7 +104,56 @@ main .section .distributor-wrapper {
   pointer-events: none;
   background-color: #fff;
   border: 1px solid rgba(22, 21, 19, 0.12);
-  box-shadow: 0px 4px 4px 0px rgba(0, 0, 0, 0.16);
+  box-shadow: 0px 4px 4px rgba(0, 0, 0, 0.16);
+  border-radius: 4px;
+  transform-origin: top left;
+  transform: scale(0);
+  transition: none;
+}
+
+.call-details.expanded {
+  transform: scale(1);
+  opacity: 1;
+}
+
+.call-icon-details-wrapper {
+  gap: 10px;
+  position: relative;
+  align-items: center;
+}
+
+.call-icon {
+  border: 1px solid #00000000;
+  border-radius: 4px;
+  box-sizing: border-box;
+  padding: 5px 10px;
+  min-width: 30px;
+}
+
+.call-icon:hover {
+  border-radius: 4px;
+  box-sizing: border-box;
+  padding: 5px 10px;
+  background-color: #fff032;
+}
+
+.icon-border {
+  border: 1px solid rgba(22, 21, 19, 0.5);
+}
+
+.call-details {
+  position: absolute;
+  left: -208px;
+  margin-top: 10px;
+  height: auto;
+  padding: 0 10px;
+  overflow: hidden;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  background-color: #fff;
+  border: 1px solid rgba(22, 21, 19, 0.12);
+  box-shadow: 0px 4px 4px rgba(0, 0, 0, 0.16);
   border-radius: 4px;
   transform-origin: top left;
   transform: scale(0);
@@ -154,36 +189,15 @@ main .section .distributor-wrapper {
     left: -220px;
   }
 
-  .distributor-select {
-    width: 70%;
-    font-size: 14px;
-    padding: 10px 12px;
+  .call-icon,
+  .call-icon:hover {
+    padding: 3px;
   }
-}
-
-.call-icon,
-.call-icon:hover {
-  padding: 3px;
 }
 
 @media screen and (max-width: 600px) {
   .dealer-details p strong {
     display: block;
     margin-bottom: 1px;
-  }
-
-  .distributor-dropdown-container {
-    padding: 12px;
-  }
-
-  .distributor-dropdown-container label {
-    font-size: 14px;
-  }
-
-  .distributor-select {
-    width: 100%;
-    min-width: 200px;
-    font-size: 14px;
-    padding: 10px;
   }
 }
