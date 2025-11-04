@@ -1,7 +1,7 @@
 export default async function decorate(block) {
   function formatPhoneNumber(num) {
     const str = String(num);
-    return `${str.slice(0, 4)} ${str.slice(4, 7)}`;
+    return `${str.slice(0, 4)}-${str.slice(4, 7)}-${str.slice(7)}`;
   }
 
   try {
@@ -15,114 +15,134 @@ export default async function decorate(block) {
     if (data && Array.isArray(data.data)) {
       // Create dropdown container
       const dropdownContainer = document.createElement("div");
-      dropdownContainer.classList.add("distributor-selector");
+      dropdownContainer.classList.add("distributor-dropdown-container");
 
-      // Create select dropdown
+      // Create label
+      const label = document.createElement("label");
+      label.textContent = "Select Distributor:";
+      label.setAttribute("for", "distributor-select");
+      dropdownContainer.appendChild(label);
+
+      // Create select element
       const select = document.createElement("select");
       select.id = "distributor-select";
-      select.classList.add("distributor-dropdown");
+      select.classList.add("distributor-select");
 
       // Add default option
       const defaultOption = document.createElement("option");
       defaultOption.value = "";
-      defaultOption.textContent = "-- Select Distributor --";
+      defaultOption.textContent = "-- Select a Distributor --";
+      defaultOption.disabled = true;
+      defaultOption.selected = true;
       select.appendChild(defaultOption);
 
-      // Populate dropdown with distributor names
-      data.data.forEach((distributor, index) => {
-        const option = document.createElement("option");
-        option.value = index;
-        option.textContent = distributor["Distributor Name"];
-        select.appendChild(option);
+      // Populate dropdown with unique distributor names
+      const uniqueDistributors = {};
+      data.data.forEach((item) => {
+        const distributorName = item["Distributor Name"];
+        if (distributorName && !uniqueDistributors[distributorName]) {
+          uniqueDistributors[distributorName] = item;
+          const option = document.createElement("option");
+          option.value = distributorName;
+          option.textContent = distributorName;
+          select.appendChild(option);
+        }
       });
 
       dropdownContainer.appendChild(select);
       block.appendChild(dropdownContainer);
 
-      // Create dealer details container (initially hidden)
-      const dealerContainer = document.createElement("div");
-      dealerContainer.classList.add("dealer-info-container");
-      dealerContainer.style.display = "none";
-      block.appendChild(dealerContainer);
+      // Create details container (initially hidden)
+      const detailsContainer = document.createElement("div");
+      detailsContainer.classList.add("dealer-details-container");
+      detailsContainer.style.display = "none";
+      block.appendChild(detailsContainer);
 
-      // Function to display dealer information
-      function displayDealer(dealer) {
-        const dealerRepsContactNumber = dealer["BDM Contact Number"];
-        const customerContactNumber = dealer["Customer Contact Number"];
-        const businessHours = dealer["Business Hours"];
-        const businessHoursbr = businessHours.replace(/,\s*/g, "<br>");
-
-        const dealerDiv = document.createElement("div");
-        dealerDiv.classList.add("dealer-details");
-
-        dealerDiv.innerHTML = `
-          <p><strong>CIL Distributortest: </strong>${
-            dealer["Distributor Name"]
-          }</p>
-          <p><strong>Agent number: </strong>${dealer["Agent Number"]}</p>
-          <div class="call-wrapper">
-            <p>Call your BDM: <strong>${dealer["BDM Name"]}</strong></p>
-            <div class="call-icon-details-wrapper">
-              <img
-                class="call-icon"
-                src="${window.hlx.codeBasePath}/icons/call.svg"
-                alt="Call Icon"
-                style="cursor: pointer;"
-              />
-              <div class="call-details">
-                <p><strong>Dealer Reps only: ${formatPhoneNumber(
-                  dealerRepsContactNumber
-                )}</strong> </p>
-                <p>Customers: ${formatPhoneNumber(customerContactNumber)}</p>
-                <p class="opening-time">${businessHoursbr}</p>
-              </div>
-            </div>
-          </div>
-        `;
-
-        dealerContainer.innerHTML = "";
-        dealerContainer.appendChild(dealerDiv);
-        dealerContainer.style.display = "block";
-
-        // Toggle call details on icon click
-        const callIcon = dealerDiv.querySelector(".call-icon");
-        const callDetails = dealerDiv.querySelector(".call-details");
-
-        if (callIcon && callDetails) {
-          callIcon.addEventListener("click", (event) => {
-            event.stopPropagation();
-            callIcon.classList.toggle("icon-border");
-            callDetails.classList.toggle("expanded");
-          });
-        }
-
-        // Close call details when clicking outside
-        document.addEventListener("click", (event) => {
-          if (
-            !callIcon.contains(event.target) &&
-            !callDetails.contains(event.target)
-          ) {
-            callIcon.classList.remove("icon-border");
-            callDetails.classList.remove("expanded");
-          }
-        });
-      }
-
-      // Add event listener for dropdown selection
+      // Event listener for dropdown change
       select.addEventListener("change", (event) => {
-        const selectedIndex = event.target.value;
+        const selectedDistributor = event.target.value;
 
-        if (selectedIndex === "") {
-          dealerContainer.style.display = "none";
-          dealerContainer.innerHTML = "";
-          return;
+        if (selectedDistributor) {
+          // Find all dealers with this distributor name
+          const dealers = data.data.filter(
+            (d) => d["Distributor Name"] === selectedDistributor
+          );
+
+          if (dealers.length > 0) {
+            const dealer = dealers[0]; // Use first match for main details
+
+            const dealerRepsContactNumber = dealer["BDM Contact Number"];
+            const customerContactNumber = dealer["Customer Contact Number"];
+            const businessHours = dealer["Business Hours"];
+            const businessHoursbr = businessHours.replace(/,\s*/g, "<br>");
+
+            const dealerDiv = document.createElement("div");
+            dealerDiv.classList.add("dealer-details");
+
+            dealerDiv.innerHTML = `
+              <p><strong>CIL Distributortest: </strong>${
+                dealer["Distributor Name"]
+              }</p>
+              <p><strong>Agent number: </strong>${dealer["Agent Number"]}</p>
+              <div class="call-wrapper">
+                <p><strong>Your BDM: </strong>${dealer["BDM Name"]}</p>
+                <div class="call-icon-details-wrapper">
+                  <img
+                    class="call-icon"
+                    src="${window.hlx.codeBasePath}/icons/call.svg"
+                    alt="Call Icon"
+                    style="cursor: pointer;"
+                  />
+                  <div class="call-details">
+                    <p><strong>Dealer Reps only: ${formatPhoneNumber(
+                      dealerRepsContactNumber
+                    )}</strong> </p>
+                    <p>Customers: ${formatPhoneNumber(
+                      customerContactNumber
+                    )}</p>
+                    <p class="opening-time">${businessHoursbr}</p>
+                  </div>
+                </div>
+              </div>
+            `;
+
+            // Clear previous details and add new
+            detailsContainer.innerHTML = "";
+            detailsContainer.appendChild(dealerDiv);
+            detailsContainer.style.display = "block";
+
+            // Toggle call details on icon click
+            const callIcon = dealerDiv.querySelector(".call-icon");
+            const callDetails = dealerDiv.querySelector(".call-details");
+
+            if (callIcon && callDetails) {
+              callIcon.addEventListener("click", (event) => {
+                event.stopPropagation();
+                callIcon.classList.toggle("icon-border");
+                callDetails.classList.toggle("expanded");
+              });
+            }
+
+            // Close call details when clicking outside
+            document.addEventListener("click", (event) => {
+              if (
+                callIcon.contains(event.target) &&
+                !callDetails.contains(event.target)
+              ) {
+                callIcon.classList.remove("icon-border");
+                callDetails.classList.remove("expanded");
+              }
+            });
+          } else {
+            detailsContainer.innerHTML = `<p>Dealer with name ${selectedDistributor} not found.</p>`;
+            detailsContainer.style.display = "block";
+          }
+        } else {
+          detailsContainer.style.display = "none";
         }
-
-        const selectedDealer = data.data[selectedIndex];
-        displayDealer(selectedDealer);
       });
     } else {
-      block.textContent = "Dealer data array missing or invalid.";
+      console.error("Dealer data array missing or invalid.");
     }
   } catch (error) {
     console.error("Error loading dealer details:", error);
