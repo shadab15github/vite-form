@@ -1,0 +1,65 @@
+{
+  "nodeName": "ROOT",
+  "items": [
+    {
+      "nodeName": "STATEMENT",
+      "choice": {
+        "nodeName": "VALIDATE_EXPRESSION"
+      },
+      "items": [
+        {
+          "nodeName": "AFCOMPONENT",
+          "value": {
+            "id": "$form.adaptiveFormWizard.customerDetailsPanel.emailAddress",
+            "type": "AFCOMPONENT",
+            "name": "emailAddress"
+          }
+        },
+        {
+          "nodeName": "CONDITION",
+          "choice": {
+            "nodeName": "COMPARISON_EXPRESSION"
+          },
+          "items": [
+            {
+              "nodeName": "EXPRESSION",
+              "choice": {
+                "nodeName": "COMPONENT"
+              },
+              "value": {
+                "id": "$form.adaptiveFormWizard.customerDetailsPanel.emailRequired",
+                "name": "emailRequired",
+                "type": "BOOLEAN",
+                "displayPath": "FORM/adaptiveFormWizard/customerDetailsPanel/emailRequired"
+              }
+            },
+            {
+              "nodeName": "OPERATOR",
+              "choice": {
+                "nodeName": "EQUALS_TO"
+              }
+            },
+            {
+              "nodeName": "EXPRESSION",
+              "choice": {
+                "nodeName": "STRING_LITERAL"
+              },
+              "value": {
+                "value": "true"
+              }
+            }
+          ]
+        }
+      ],
+      "isValid": true,
+      "enabled": true,
+      "version": 1,
+      "script": "if ($form.adaptiveFormWizard.customerDetailsPanel.emailRequired.value === true) { $form.adaptiveFormWizard.customerDetailsPanel.emailAddress.mandatory = true; } else { $form.adaptiveFormWizard.customerDetailsPanel.emailAddress.mandatory = false; }",
+      "eventName": "Validate",
+      "ruleType": "",
+      "description": "",
+      "communicationComposerRuleType": "server",
+      "communicationComposerRuleLanguageType": "javascript"
+    }
+  ]
+}
