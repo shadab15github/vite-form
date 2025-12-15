@@ -67,3 +67,57 @@ export default tseslint.config([
   },
 ])
 ```
+import { useEffect, useState } from "react";
+
+export default function TooltipData() {
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    fetch("https://gg.com/api")
+      .then((res) => {
+        if (!res.ok) {
+          throw new Error("Failed to fetch data");
+        }
+        return res.json();
+      })
+      .then((result) => {
+        setData(result?.data?.tooltipsByPath?.item);
+      })
+      .catch((err) => {
+        setError(err.message);
+      })
+      .finally(() => {
+        setLoading(false);
+      });
+  }, []);
+
+  if (loading) {
+    return <div className="p-4 text-gray-500">Loading...</div>;
+  }
+
+  if (error) {
+    return <div className="p-4 text-red-500">Error: {error}</div>;
+  }
+
+  if (!data) {
+    return <div className="p-4">No data found</div>;
+  }
+
+  return (
+    <div className="max-w-xl mx-auto p-6 bg-white rounded-xl shadow">
+      <h2 className="text-xl font-semibold text-gray-900 mb-3">
+        {data.tooltipTitle}
+      </h2>
+
+      <div
+        className="text-gray-700 text-sm leading-relaxed"
+        dangerouslySetInnerHTML={{
+          __html: data.tooltipContent?.html,
+        }}
+      />
+    </div>
+  );
+}
+
