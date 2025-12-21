@@ -64,3 +64,58 @@ const Posts: React.FC = () => {
 };
 
 export default Posts;
+
+.posts-container {
+  padding: 20px;
+  max-width: 900px;
+  margin: auto;
+}
+
+.title {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.posts-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 16px;
+}
+
+.post-card {
+  background: #ffffff;
+  border-radius: 8px;
+  padding: 16px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+  transition: transform 0.2s ease;
+}
+
+.post-card:hover {
+  transform: translateY(-4px);
+}
+
+.post-card h3 {
+  font-size: 16px;
+  margin-bottom: 8px;
+}
+
+.post-card p {
+  font-size: 14px;
+  color: #555;
+  margin-bottom: 10px;
+}
+
+.post-card span {
+  font-size: 12px;
+  color: #888;
+}
+
+.status {
+  text-align: center;
+  margin-top: 40px;
+  font-size: 16px;
+}
+
+.error {
+  color: red;
+}
